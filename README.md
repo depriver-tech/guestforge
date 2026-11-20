@@ -16,6 +16,8 @@ python3 guestforge.py create vms/windows
 python3 guestforge.py start vms/windows --iso "/path/to/Windows-arm64.iso" --drivers "/path/to/virtio-win.iso"
 ```
 
+The `doctor` command checks for the QEMU binaries, readable firmware, HVF acceleration, Cocoa display, and the TPM backend and device compiled into QEMU. Run the launcher's unit tests with `python3 -m unittest discover -s tests -v`.
+
 After installation, shut down from inside Windows, then start without installation media using `python3 guestforge.py start vms/windows`. The VM directory contains the disk, UEFI variables and TPM state. Back up the whole directory with the VM shut down.
 
 Defaults are 4 vCPUs, 8 GiB of RAM and a sparse 256 GiB disk. See `create --help` and `start --help` to change these or supply custom firmware and a matching UEFI variables template.

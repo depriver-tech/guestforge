@@ -30,6 +30,51 @@ def firmware(qemu):
     )
 
 
+QEMU_CAPABILITIES = (
+    ("HVF acceleration", ("-accel", "help"), "hvf"),
+    ("Cocoa display", ("-display", "help"), "cocoa"),
+    ("TPM emulator backend", ("-tpmdev", "help"), "emulator"),
+    ("ARM TPM device", ("-device", "help"), '"tpm-tis-device"'),
+)
+
+
+def probe(binary, arguments, expected=None):
+    try:
+        result = subprocess.run(
+            [binary, *arguments], capture_output=True, text=True, timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return str(error)
+    output = (result.stdout + result.stderr).strip()
+    if expected is None:
+        if result.returncode == 0:
+            return None
+    elif expected in output.split():
+        # Some QEMU help commands exit nonzero after listing supported options.
+        return None
+    return output or f"exit status {result.returncode}"
+
+
+def doctor():
+    checks = {}
+    for name in ("qemu-system-aarch64", "qemu-img", "swtpm"):
+        path = shutil.which(name)
+        version_error = probe(path, ("--version",)) if path else "missing from PATH"
+        checks[name] = version_error
+        print(f"{name}: {path if version_error is None else version_error}")
+        if name != "qemu-system-aarch64" or version_error is not None:
+            continue
+        for file in firmware(path):
+            present = file.is_file() and os.access(file, os.R_OK)
+            checks[str(file)] = None if present else "missing or unreadable"
+            print(f"{file}: {'readable' if present else checks[str(file)]}")
+        for label, arguments, expected in QEMU_CAPABILITIES:
+            error = probe(path, arguments, expected)
+            checks[label] = error
+            print(f"{label}: {'available' if error is None else 'unavailable'}")
+    return int(any(error is not None for error in checks.values()))
+
+
 def readable_file(path):
     path = path.expanduser().resolve(strict=True)
     if not path.is_file() or not os.access(path, os.R_OK):
@@ -81,9 +126,9 @@ def running_tpm(binary, directory):
     with tempfile.TemporaryDirectory(prefix="gf-", dir="/tmp") as temporary:
         socket = Path(temporary) / "tpm.sock"
         process = subprocess.Popen([
-            binary, "socket", "--tpm2", "--tpmstate", f"dir={directory}",
+            binary, "socket", "--tpm2", "--tpmstate", "dir=.",
             "--ctrl", f"type=unixio,path={socket}",
-        ])
+        ], cwd=directory)
         try:
             deadline = time.monotonic() + 5
             while not socket.exists():
@@ -156,17 +201,7 @@ def main():
         if platform.system() != "Darwin" or platform.machine() != "arm64":
             raise ValueError("GuestForge requires native ARM64 Python on Apple silicon macOS.")
         if options.command == "doctor":
-            missing = False
-            for name in ("qemu-system-aarch64", "qemu-img", "swtpm"):
-                path = shutil.which(name)
-                print(f"{name}: {path or 'missing'}")
-                missing |= path is None
-                if name == "qemu-system-aarch64" and path:
-                    for file in firmware(path):
-                        present = file.is_file()
-                        print(f"{file}: {'found' if present else 'missing'}")
-                        missing |= not present
-            return int(missing)
+            return doctor()
         qemu = executable("qemu-system-aarch64")
         vm = options.vm.expanduser().resolve()
         if options.command == "create":

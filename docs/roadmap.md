@@ -18,5 +18,6 @@
 | [Forza Horizon 5](https://store.steampowered.com/app/1551360/Forza_Horizon_5/) | Drive a complete race with a controller | Pending Direct3D 12 |
 | [Forza Horizon 6](https://store.steampowered.com/app/2483190/Forza_Horizon_6/) | Drive a complete race with a controller | Pending Direct3D 12 |
 | [NBA 2K27](https://store.steampowered.com/app/4356430/NBA_2K27/) | Play a complete exhibition game and verify AVX2 compatibility | Pending Direct3D 12 |
+| [EA SPORTS FC 27](https://store.steampowered.com/app/4080220/EA_SPORTS_FC_27/) | Launch from Steam through the EA app, pass EA Javelin Anticheat checks, and complete a Kick Off match with a controller | Pending Direct3D 12 and guest compatibility verification |
 
 Verify publisher-supported launch and multiplayer behavior with each game's normal client and anti-cheat. Steam client compatibility, game rendering and online play are separate checks.

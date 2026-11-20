@@ -1,0 +1,7 @@
+__pycache__/
+.DS_Store
+*.iso
+*.qcow2
+*.fd
+*.sock
+/vms/
